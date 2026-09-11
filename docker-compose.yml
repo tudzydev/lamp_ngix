@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: lemp_mariadb
+    volumes:
+      - ./mariadb/initdb:/docker-entrypoint-initdb.d:ro
+      - ./mariadb/data:/var/lib/mysql
+    environment:
+      MARIADB_ROOT_PASSWORD: 1234
+      MARIADB_DATABASE: sample_db
+      MARIADB_USER: admin
+      MARIADB_PASSWORD: 1234
+    restart: unless-stopped
+    networks:
+      - web_network
+
+  php:
+    build:
+      context: ./php
+    container_name: lemp_php
+    depends_on:
+      - db
+    volumes:
+      - ./public_html:/var/www/html
+    expose:
+      - "9000"
+    restart: unless-stopped
+    networks:
+      - web_network
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: lemp_nginx
+    depends_on:
+      - php
+    volumes:
+      - ./public_html:/var/www/html
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - "88:80"
+    restart: unless-stopped
+    networks:
+      - web_network
+
+networks:
+  web_network:
+    name: lemp
+    driver: bridge

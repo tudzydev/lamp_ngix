@@ -5,12 +5,17 @@ $username = "admin";
 $password = "1234";
 $dbname = "sample_db";
 
-// Create Connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+$dsn = "mysql:host=$servername;dbname=$dbname;charset=utf8mb4";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
 
-// Check Connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+try {
+    $pdo = new PDO($dsn, $username, $password, $options);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
 }
 
 // Fetch Summary Stats
@@ -21,14 +26,23 @@ $statsSql = "SELECT
     AVG(Age) AS avg_age,
     AVG(Fare) AS avg_fare
 FROM titanic";
-$statsResult = $conn->query($statsSql);
-$stats = $statsResult && $statsResult->num_rows > 0 ? $statsResult->fetch_assoc() : [
-    'total' => 0,
-    'survived_count' => 0,
-    'deceased_count' => 0,
-    'avg_age' => 0,
-    'avg_fare' => 0
-];
+
+try {
+    $statsStmt = $pdo->query($statsSql);
+    $stats = $statsStmt ? $statsStmt->fetch() : false;
+} catch (PDOException $e) {
+    $stats = false;
+}
+
+if (!$stats) {
+    $stats = [
+        'total' => 0,
+        'survived_count' => 0,
+        'deceased_count' => 0,
+        'avg_age' => 0,
+        'avg_fare' => 0
+    ];
+}
 
 $total = (int)($stats['total'] ?? 0);
 $survived = (int)($stats['survived_count'] ?? 0);
@@ -39,7 +53,12 @@ $avgAge = number_format((float)($stats['avg_age'] ?? 0), 1);
 
 // Fetch Data from 'titanic' Table
 $sql = "SELECT * FROM titanic ORDER BY `index` ASC";
-$result = $conn->query($sql);
+try {
+    $stmt = $pdo->query($sql);
+    $rows = $stmt ? $stmt->fetchAll() : [];
+} catch (PDOException $e) {
+    $rows = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -288,7 +307,7 @@ $result = $conn->query($sql);
             </div>
 
             <!-- Table -->
-            <?php if ($result && $result->num_rows > 0): ?>
+            <?php if (!empty($rows)): ?>
                 <div class="table-responsive">
                     <table id="titanicTable" class="table table-hover align-middle w-100">
                         <thead>
@@ -309,7 +328,7 @@ $result = $conn->query($sql);
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while ($row = $result->fetch_assoc()): ?>
+                            <?php foreach ($rows as $row): ?>
                                 <?php
                                 $survivedVal = (int)$row['Survived'];
                                 $pclassVal = (int)$row['Pclass'];
@@ -395,7 +414,7 @@ $result = $conn->query($sql);
                                         <?php endif; ?>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -462,4 +481,4 @@ $result = $conn->query($sql);
     </script>
 </body>
 </html>
-<?php $conn->close(); ?>
+<?php $pdo = null; ?>

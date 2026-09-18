@@ -8,16 +8,24 @@ $dbConnected = false;
 $dbSelected = false;
 $errorMessage = "";
 
-$dbhandle = @mysqli_connect($servername, $username, $password);
-if ($dbhandle) {
+try {
+    // 1. Check MariaDB Server Connection
+    $pdoServer = new PDO("mysql:host=$servername;charset=utf8mb4", $username, $password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ]);
     $dbConnected = true;
-    if (@mysqli_select_db($dbhandle, $dbname)) {
+
+    // 2. Check Database Selection
+    try {
+        $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8mb4", $username, $password, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
         $dbSelected = true;
-    } else {
-        $errorMessage = mysqli_error($dbhandle);
+    } catch (PDOException $e) {
+        $errorMessage = $e->getMessage();
     }
-} else {
-    $errorMessage = mysqli_connect_error();
+} catch (PDOException $e) {
+    $errorMessage = $e->getMessage();
 }
 ?>
 <!DOCTYPE html>

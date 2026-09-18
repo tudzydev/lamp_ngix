@@ -38,7 +38,7 @@ services:
       - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     ports:
-      - "88:09"
+      - "8809:80"
     restart: unless-stopped
     networks:
       - web_network09

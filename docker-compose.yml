@@ -17,7 +17,7 @@ services:
   php:
     build:
       context: ./php
-    container_name: lemp_php
+    container_name: lemp_php09
     depends_on:
       - db
     volumes:
@@ -30,7 +30,7 @@ services:
 
   nginx:
     image: nginx:stable-alpine
-    container_name: lemp_nginx
+    container_name: lemp_nginx09
     depends_on:
       - php
     volumes:

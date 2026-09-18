@@ -12,7 +12,7 @@ services:
       MARIADB_PASSWORD: 1234
     restart: unless-stopped
     networks:
-      - web_network
+      - web_network09
 
   php:
     build:
@@ -26,7 +26,7 @@ services:
       - "9000"
     restart: unless-stopped
     networks:
-      - web_network
+      - web_network09
 
   nginx:
     image: nginx:stable-alpine
@@ -41,9 +41,9 @@ services:
       - "88:80"
     restart: unless-stopped
     networks:
-      - web_network
+      - web_network09
 
 networks:
-  web_network:
-    name: lemp
+  web_network09:
+    name: web_network09
     driver: bridge
